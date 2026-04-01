@@ -1,0 +1,10 @@
+streamlit
+pandas
+numpy
+pillow
+numpy 
+scikit-learn 
+pillow
+neo4j
+tensorflow
+git+https://github.com/openai/CLIP.git
