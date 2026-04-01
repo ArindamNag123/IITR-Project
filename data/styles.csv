@@ -1,0 +1,43 @@
+id,gender,masterCategory,subCategory,articleType,baseColour,season,year,usage,productDisplayName,price,associated_ids
+14500,Men,Footwear,Shoes,Casual Shoes,Brown,Fall,2011,Casual,Flying Machine Men Brown Casual Shoes,1999,14507 14529 14344
+14501,Men,Footwear,Shoes,Casual Shoes,Grey,Fall,2011,Casual,Flying Machine Men Grey Casual Shoes,1899,14508 14502
+14502,Men,Footwear,Shoes,Casual Shoes,Black,Fall,2011,Casual,Flying Machine Men Black Casual Shoes,1999,14501 14500
+14503,Men,Footwear,Shoes,Casual Shoes,Blue,Fall,2011,Casual,Flying Machine Men Blue Casual Shoes,1999,14500 14502
+14504,Men,Footwear,Shoes,Casual Shoes,Black,Fall,2011,Casual,Flying Machine Men Black Casual Shoes,1999,14500
+14505,Men,Footwear,Shoes,Casual Shoes,Black,Fall,2011,Casual,Flying Machine Men Black Casual Shoes,1999,14500
+14506,Men,Footwear,Shoes,Casual Shoes,Black,Fall,2011,Casual,Flying Machine Men Black Casual Shoes,1999,14500
+14507,Men,Apparel,Topwear,Tshirts,Black,Fall,2011,Sports,ADIDAS Men Solid Black Jerseys,1299,14500 14529 14508
+14508,Men,Apparel,Topwear,Tshirts,Navy Blue,Fall,2011,Sports,ADIDAS Men Solid Navy Blue Jerseys,1399,14501 14507
+14509,Unisex,Footwear,Shoes,Casual Shoes,White,Fall,2012,Casual,Newfeel Unisex White Shoes,1799,14500
+14510,Men,Apparel,Topwear,Shirts,Green,Fall,2011,Formal,Mark Taylor Men Green Shirt,1499,14511 14512
+14511,Men,Apparel,Topwear,Shirts,Blue,Fall,2011,Formal,Mark Taylor Men Blue Shirt,1599,14510 14512
+14512,Men,Apparel,Topwear,Shirts,Blue,Fall,2011,Formal,Mark Taylor Men Light Blue Shirt,1599,14510
+14513,Men,Apparel,Topwear,Shirts,Blue,Fall,2011,Formal,Mark Taylor Men Blue Pattern Shirt,1599,14510
+14514,Men,Apparel,Topwear,Shirts,Brown,Fall,2011,Formal,Mark Taylor Men Brown Shirt,1499,14510
+14515,Men,Apparel,Topwear,Shirts,Pink,Fall,2011,Formal,Mark Taylor Men Pink Shirt,1499,14510
+14516,Men,Apparel,Topwear,Shirts,White,Fall,2011,Formal,Mark Taylor Men White Shirt,1499,14510
+14517,Men,Apparel,Topwear,Shirts,Blue,Fall,2011,Formal,Mark Taylor Men Blue Pattern Shirt,1599,14510
+14518,Men,Apparel,Topwear,Shirts,Grey,Fall,2011,Formal,Mark Taylor Men Grey Shirt,1499,14510
+14519,Men,Apparel,Topwear,Shirts,White,Fall,2011,Formal,Mark Taylor Men White Pattern Shirt,1499,14510
+14520,Men,Apparel,Topwear,Shirts,Blue,Fall,2011,Formal,Mark Taylor Men Dark Blue Shirt,1599,14510
+14521,Men,Apparel,Topwear,Shirts,Red,Fall,2011,Formal,Mark Taylor Men Red Shirt,1499,14510
+14522,Men,Apparel,Topwear,Shirts,Olive,Fall,2011,Formal,Mark Taylor Men Olive Shirt,1499,14510
+14523,Men,Apparel,Topwear,Shirts,Green,Fall,2011,Formal,Mark Taylor Men Olive Green Shirt,1499,14510
+14524,Men,Apparel,Topwear,Shirts,Grey,Fall,2011,Formal,Mark Taylor Men Grey Pattern Shirt,1499,14510
+14529,Men,Apparel,Topwear,Tshirts,Red,Fall,2011,Casual,Mark Taylor Men Printed Red Tshirt,999,14507 14530
+14530,Men,Apparel,Topwear,Tshirts,Green,Fall,2011,Casual,Mark Taylor Men Printed Green Tshirt,999,14529
+14532,Men,Apparel,Topwear,Tshirts,Navy Blue,Fall,2011,Casual,Mark Taylor Men Navy Tshirt,999,14529
+14533,Men,Apparel,Topwear,Tshirts,Green,Fall,2011,Casual,Mark Taylor Men Green Tshirt,999,14529
+14534,Men,Apparel,Topwear,Tshirts,Black,Fall,2011,Casual,Mark Taylor Men Black Tshirt,999,14529
+14344,Men,Footwear,Shoes,Sports Shoes,White,Fall,2011,Sports,Nike Men Air Force White Shoes,2999,14500 14345
+14345,Men,Footwear,Shoes,Sports Shoes,Grey,Fall,2011,Sports,Nike Men Grey Shoes,2899,14344
+14346,Men,Footwear,Shoes,Sports Shoes,Black,Fall,2011,Sports,Nike Men Black Shoes,2799,14344
+14347,Men,Footwear,Shoes,Sports Shoes,Black,Fall,2011,Sports,Nike Men Fusion Black Shoes,2799,14344
+14348,Women,Footwear,Shoes,Heels,White,Winter,2015,Casual,Catwalk Women White Flats,1299,14349 14350
+14349,Women,Footwear,Shoes,Heels,Gold,Winter,2015,Casual,Catwalk Women Gold Flats,1399,14348
+14350,Women,Footwear,Shoes,Heels,Black,Winter,2015,Casual,Catwalk Women Black Flats,1299,14348
+14351,Women,Footwear,Shoes,Heels,Brown,Winter,2015,Casual,Catwalk Women Brown Heels,1399,14348
+14352,Women,Footwear,Shoes,Flats,Blue,Winter,2015,Casual,Catwalk Women Blue Flats,1299,14348
+14535,Women,Apparel,Topwear,Kurtas,Blue,Fall,2011,Ethnic,Vishudh Women Blue Kurta,999,14536 14537
+14536,Women,Apparel,Topwear,Kurtis,White,Fall,2011,Ethnic,Vishudh Women White Kurti,899,14535
+14537,Women,Apparel,Topwear,Kurtas,Brown,Fall,2011,Ethnic,Vishudh Women Brown Kurta,1099,14535
