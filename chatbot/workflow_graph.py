@@ -36,7 +36,7 @@ from langgraph.graph import END, START, StateGraph
 from chatbot.agents.general_agent import general_agent_node
 from chatbot.registry import registry
 from chatbot.state import AgentState
-from chatbot.supervisor import route_decision, supervisor_node
+from chatbot.agent_router import route_decision, supervisor_node
 
 
 def build_graph():

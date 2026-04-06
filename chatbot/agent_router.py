@@ -32,7 +32,7 @@ load_dotenv()
 
 # Registry is imported after agents so all @registry.register decorators
 # have already fired by the time supervisor_node is first called.
-# (graph.py imports chatbot.agents before chatbot.supervisor)
+# (workflow_graph.py imports chatbot.agents before chatbot.agent_router)
 from chatbot.registry import registry  # noqa: E402
 
 
