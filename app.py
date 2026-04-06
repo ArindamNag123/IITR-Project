@@ -30,7 +30,7 @@ st.session_state.setdefault("chat_history", [])
 
 @st.cache_resource
 def load_chat_graph():
-    from chatbot.workflow_graph import retail_graph
+    from chatbot.chatbot_controller import retail_graph
     return retail_graph
 
 

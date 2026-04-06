@@ -1,0 +1,17 @@
+id,productDisplayName,articleType,masterCategory,subCategory,baseColour,gender,price
+1000,BioGaia Probiotic Drops,Health Supplement,Health,Probiotic,White,Unisex,850
+2000,Blackmores Fish Oil,Vitamins & Supplements,Health,Supplement,Yellow,Unisex,1200
+3000,Ginvera Marvel Gel,Skincare,Beauty,Face Wash,Green,Women,450
+4000,Gripe Water for Infants,Baby Care,Health,Baby Medicine,Blue,Unisex,320
+5000,Heptral 400 Tablets,Medicine,Health,Prescription,White,Unisex,980
+6000,Lifebuoy Hand Wash,Personal Care,Beauty,Hand Wash,Red,Unisex,120
+7000,Lifebuoy Soap Bar,Personal Care,Beauty,Soap,Red,Unisex,80
+8000,Neutrogena Face Wash,Skincare,Beauty,Face Wash,Orange,Women,650
+9000,Neutrogena Moisturizer,Skincare,Beauty,Moisturizer,White,Women,850
+10000,SUKIN Natural Cleanser,Skincare,Beauty,Cleanser,Green,Women,780
+11000,Sebamed Baby Lotion,Baby Care,Health,Baby Lotion,White,Unisex,550
+12000,Sebamed Cleansing Bar,Personal Care,Beauty,Soap,White,Unisex,420
+13000,Vitagummies Vitamins,Vitamins & Supplements,Health,Supplement,Orange,Unisex,680
+14000,Zyrtec-R Antihistamine,Medicine,Health,Allergy Relief,White,Unisex,450
+16000,Kids Gummies Vitamins,Vitamins & Supplements,Health,Supplement,Multicolor,Unisex,520
+17000,Demo Product,Health Supplement,Health,General,White,Unisex,300

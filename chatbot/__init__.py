@@ -6,6 +6,6 @@ Public surface:
     result = retail_graph.invoke({"messages": [HumanMessage(content="...")]})
 """
 
-from chatbot.workflow_graph import retail_graph
+from chatbot.chatbot_controller import retail_graph
 
 __all__ = ["retail_graph"]
