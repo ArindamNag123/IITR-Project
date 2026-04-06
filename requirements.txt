@@ -8,3 +8,7 @@ pillow
 neo4j
 tensorflow
 git+https://github.com/openai/CLIP.git
+langchain-core
+faiss-cpu
+langgraph
+python-dotenv
