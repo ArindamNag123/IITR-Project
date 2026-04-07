@@ -73,6 +73,7 @@ _DEVANAGARI_RE = re.compile(r"[\u0900-\u097F]")
 _PRIORITY_PATTERNS: list[tuple[str, str]] = [
     (r"inv-\d+",                       "billing"),     # invoice ID
     (r"\border\s*(id|#|no)?\s*ord-\d+", "order"),      # order ID
+    (r"\bbill(ing)?\b|\binvoice\b|\bpayment\b|\bgst\b|\btax\b|\breceipt\b", "billing"),
     (r"\btranslat",                    "translator"),
     (r"\bhindi\b|\benglish\b",         "translator"),
     (r"\bcancel\b",                    "cancellation"),

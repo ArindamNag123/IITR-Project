@@ -22,6 +22,8 @@ st.set_page_config(layout="wide", page_title="Smart Retail App")
 
 st.session_state.setdefault("cart", [])
 st.session_state.setdefault("chat_history", [])
+st.session_state.setdefault("chat_history_en", [])
+st.session_state.setdefault("last_user_language", "en")
 
 
 # ---------------------------------------------------------------------------
@@ -220,12 +222,28 @@ def render_chat_panel():
 
 
 def handle_user_message(user_input: str):
+    # Display history stays in the user's language.
     st.session_state.chat_history.append({"role": "user", "content": user_input})
+
+    # Internal history is kept in English so the supervisor + all agents work in one language.
+    from chatbot.translator_module import ChatbotTranslator
+
+    translator = ChatbotTranslator()
+    # STEP 1: translate user → English (best-effort; never block the graph)
+    try:
+        tr = translator.translate_to_english(user_input)
+        st.session_state.last_user_language = tr.detected_language or "en"
+        user_input_en = tr.english
+    except Exception:
+        st.session_state.last_user_language = "en"
+        user_input_en = user_input
+
+    st.session_state.chat_history_en.append({"role": "user", "content": user_input_en})
 
     lc_messages = [
         HumanMessage(content=m["content"]) if m["role"] == "user"
         else LCMessage(content=m["content"])
-        for m in st.session_state.chat_history
+        for m in st.session_state.chat_history_en
     ]
 
     with st.chat_message("assistant"):
@@ -235,12 +253,27 @@ def handle_user_message(user_input: str):
                     "messages": lc_messages,
                     "next_agent": "",
                     "intent": "",
-                    "detected_language": "en",
+                    # We pass what we detected from the *original* user input.
+                    # Agents/supervisor can use it for optional language-aware behavior.
+                    "detected_language": st.session_state.last_user_language,
                     "rag_context": None,
                     "metadata": {},
                 })
-                agent_reply = result["messages"][-1].content
+                agent_reply_en = result["messages"][-1].content
                 routed_to = result.get("next_agent", "?")
+
+                # Store the English reply for next-turn context.
+                st.session_state.chat_history_en.append({"role": "assistant", "content": agent_reply_en})
+
+                # STEP 3: translate English reply → user's language (best-effort).
+                try:
+                    agent_reply = translator.translate_from_english(
+                        agent_reply_en,
+                        target_language=st.session_state.last_user_language,
+                        reference_text=user_input,
+                    )
+                except Exception:
+                    agent_reply = agent_reply_en
 
                 st.markdown(agent_reply)
                 st.caption(f"→ **{routed_to} agent**")
