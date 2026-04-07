@@ -330,71 +330,71 @@ class ChatbotTranslator:
 
 
 # Example usage
-if __name__ == "__main__":
-    import sys
+# if __name__ == "__main__":
+#     import sys
     
-    print("=" * 70)
-    print("AGENTIC TRANSLATOR - Local LLM vs OpenAI ChatGPT")
-    print("=" * 70)
+#     print("=" * 70)
+#     print("AGENTIC TRANSLATOR - Local LLM vs OpenAI ChatGPT")
+#     print("=" * 70)
     
-    # Choose translator
-    use_openai = True  # Set to True to use OpenAI API
+#     # Choose translator
+#     use_openai = True  # Set to True to use OpenAI API
     
-    if use_openai:
-        print("\nInitializing OpenAI ChatGPT translator...")
-        ## give your api key:
-        #  api_key "your key"
-        # Make sure OPENAI_API_KEY is set in your environment
-        translator = ChatbotTranslator(use_openai=True, model="gpt-3", api_key=api_key)
-    else:
-        print("\nInitializing local LLM translator (distilgpt2)...")
-        translator = ChatbotTranslator(use_openai=False, model="distilgpt2", use_gpu=False)
+#     if use_openai:
+#         print("\nInitializing OpenAI ChatGPT translator...")
+#         ## give your api key:
+#         #  api_key "your key"
+#         # Make sure OPENAI_API_KEY is set in your environment
+#         translator = ChatbotTranslator(use_openai=True, model="gpt-3", api_key=api_key)
+#     else:
+#         print("\nInitializing local LLM translator (distilgpt2)...")
+#         translator = ChatbotTranslator(use_openai=False, model="distilgpt2", use_gpu=False)
     
-    print("\n" + "=" * 70)
-    print("STEP 1: DETECT LANGUAGE & TRANSLATE TO ENGLISH")
-    print("=" * 70)
+#     print("\n" + "=" * 70)
+#     print("STEP 1: DETECT LANGUAGE & TRANSLATE TO ENGLISH")
+#     print("=" * 70)
 
-    ## ***********************************************Testing Block****************************************************
-        # Test queries
-    test_queries = [
-        "Hello, how are you?",
-        "नमस्ते, आप कैसे हैं?",
-        "Hi, my name is Akilesh",
-    ]
+#     ## ***********************************************Testing Block****************************************************
+#         # Test queries
+#     test_queries = [
+#         "Hello, how are you?",
+#         "नमस्ते, आप कैसे हैं?",
+#         "Hi, my name is Akilesh",
+#     ]
     
-    results = []
-    if not use_openai:
-        for query in test_queries:
-            result = translator.translate_to_english(query)
-            results.append(result)
-            print(f"\n📝 Original ({result['detected_language'].upper()}): {result['original']}")
-            print(f"🔄 English Translation: {result['english_translation']}")
-    else:
-        for query in test_queries:
-            result = translator.translate_to_english(query)
-            results.append(result)
-            print(f"\n📝 Original: {result['original']}")
-            print(f"🔄 English Translation: {result['english_translation']}")
+#     results = []
+#     if not use_openai:
+#         for query in test_queries:
+#             result = translator.translate_to_english(query)
+#             results.append(result)
+#             print(f"\n📝 Original ({result['detected_language'].upper()}): {result['original']}")
+#             print(f"🔄 English Translation: {result['english_translation']}")
+#     else:
+#         for query in test_queries:
+#             result = translator.translate_to_english(query)
+#             results.append(result)
+#             print(f"\n📝 Original: {result['original']}")
+#             print(f"🔄 English Translation: {result['english_translation']}")
         
-    print("\n" + "=" * 70)
-    print("STEP 2: OTHER TOOLS PROCESS ENGLISH QUERY")
-    print("=" * 70)
-    print("(Simulating external tool processing...)")
+#     print("\n" + "=" * 70)
+#     print("STEP 2: OTHER TOOLS PROCESS ENGLISH QUERY")
+#     print("=" * 70)
+#     print("(Simulating external tool processing...)")
     
-    english_responses = [
-        "Hello! I'm doing great, thank you!",
-        "नमस्ते! I am fine, thank you!",
-        "Nice to meet you!",
-    ]
+#     english_responses = [
+#         "Hello! I'm doing great, thank you!",
+#         "नमस्ते! I am fine, thank you!",
+#         "Nice to meet you!",
+#     ]
     
-    print("\n" + "=" * 70)
-    print("STEP 3: TRANSLATE RESPONSE BACK TO USER'S LANGUAGE")
-    print("=" * 70)
+#     print("\n" + "=" * 70)
+#     print("STEP 3: TRANSLATE RESPONSE BACK TO USER'S LANGUAGE")
+#     print("=" * 70)
     
-    for i, resp in enumerate(english_responses):
-        final_response = translator.translate_from_english(resp)
-        detected_lang = results[i]['detected_language'].upper()
-        print(f"\n✅ Response in {detected_lang}: {final_response}")
+#     for i, resp in enumerate(english_responses):
+#         final_response = translator.translate_from_english(resp)
+#         detected_lang = results[i]['detected_language'].upper()
+#         print(f"\n✅ Response in {detected_lang}: {final_response}")
 
     ##*******************************************External usage******************************************************
 
