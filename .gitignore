@@ -1,1 +1,21 @@
+# Environment — never commit real secrets
+.env
 
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Dataset images (large binary files — store separately or use Git LFS)
+dataset/images/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/

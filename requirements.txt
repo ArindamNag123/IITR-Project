@@ -2,9 +2,14 @@ streamlit
 pandas
 numpy
 pillow
-numpy 
-scikit-learn 
-pillow
+scikit-learn
 neo4j
 tensorflow
+torch
+torchvision
+faiss-cpu
 git+https://github.com/openai/CLIP.git
+langchain-core
+langchain-openai
+langgraph
+python-dotenv
