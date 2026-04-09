@@ -1,13 +1,40 @@
 import os
 import tempfile
+import uuid
+import logging
+from datetime import datetime
 
 import pandas as pd
 import streamlit as st
+import redis
 from PIL import Image
+from openai import OpenAI
 from langchain_core.messages import HumanMessage, AIMessage as LCMessage
+from dotenv import load_dotenv
 
 from config import DATA_PATH, IMAGE_FOLDER
 from similarity_engine import search_by_image, search_by_text
+
+load_dotenv()
+
+# --- Logging Configuration ---
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+# --- FalkorDB Connection ---
+r = redis.Redis(
+    host=os.getenv("FALKORDB_HOST"),
+    port=int(os.getenv("FALKORDB_PORT", 6379)),
+    username=os.getenv("FALKORDB_USER"),
+    password=os.getenv("FALKORDB_PASS"),
+    decode_responses=True
+)
+
+try:
+    r.ping()
+    logger.info("✅ Connected to FalkorDB")
+except Exception as e:
+    logger.error(f"❌ FalkorDB Connection Error: {e}")
 
 # ---------------------------------------------------------------------------
 # Page config
@@ -24,6 +51,11 @@ st.session_state.setdefault("cart", [])
 st.session_state.setdefault("chat_history", [])
 st.session_state.setdefault("chat_history_en", [])
 st.session_state.setdefault("last_user_language", "en")
+st.session_state.setdefault("invoice", None)
+st.session_state.setdefault("show_invoice", False)
+
+# 🔐 Secure API Key
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
 # ---------------------------------------------------------------------------
@@ -187,13 +219,123 @@ def render_sidebar():
 def render_cart():
     st.sidebar.subheader("Cart")
     total = 0
-    for item in st.session_state.cart:
-        st.sidebar.write(f"{item['name']} — ₹{item['price']}")
-        total += item["price"]
+    for i, item in enumerate(st.session_state.cart):
+        col1, col2 = st.sidebar.columns([4, 1])
+        with col1:
+            st.write(f"{item['name']} — ₹{item['price']}")
+            total += item["price"]
+        with col2:
+            if st.sidebar.button("❌", key=f"remove_{item['id']}_{i}"):
+                st.session_state.cart.pop(i)
+                st.rerun()
     st.sidebar.write(f"**Total: ₹{total}**")
 
-    if st.sidebar.button("Generate Bill"):
-        st.sidebar.text_area("Bill", build_bill(st.session_state.cart), height=260)
+    if st.sidebar.button("🛍️ Buy Now"):
+        if not st.session_state.cart:
+            st.sidebar.warning("Cart is empty")
+        else:
+            order = create_order(st.session_state.cart)
+            with st.spinner("Generating AI invoice..."):
+                invoice = generate_invoice(order)
+            
+            save_order(order)
+            st.session_state.invoice = invoice
+            st.session_state.show_invoice = True
+            st.session_state.cart = []
+            st.sidebar.success("Order placed!")
+
+def create_order(cart, user="Guest"):
+    order_id = str(uuid.uuid4())[:8]
+    invoice_no = f"INV-{int(datetime.now().timestamp())}"
+    timestamp = datetime.now()
+    products = [i["name"] for i in cart]
+    prices = [i["price"] for i in cart]
+    total = sum(prices)
+    return {
+        "user_name": user,
+        "order_id": order_id,
+        "invoice_no": invoice_no,
+        "date": timestamp,
+        "products_list": products,
+        "prices_list": prices,
+        "total_price": total
+    }
+
+def generate_invoice(order):
+    items_table = "\n".join([
+        f"{i+1}. {p} - ₹{pr}"
+        for i, (p, pr) in enumerate(zip(order["products_list"], order["prices_list"]))
+    ])
+    gst = int(order["total_price"] * 0.05)
+    final = int(order["total_price"] * 1.05)
+    prompt = f"""
+    Create a professional retail invoice.
+    Include:
+    - Store Name: Smart Retail AI
+    - Invoice Number
+    - Order ID
+    - Date
+    - Customer Name
+    - Itemized list
+    - Subtotal, GST (5%), Final Total
+    - Friendly thank-you message
+    DATA:
+    Invoice No: {order['invoice_no']}
+    Order ID: {order['order_id']}
+    Date: {order['date']}
+    Customer: {order['user_name']}
+    Items:
+    {items_table}
+    Subtotal: ₹{order['total_price']}
+    GST: ₹{gst}
+    Final: ₹{final}
+    """
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}]
+    )
+    return response.choices[0].message.content
+
+def save_order(order):
+    logger.info(f"FETCHING DATA BEFORE SAVE: Order ID: {order['order_id']}, Total: ₹{order['total_price']}")
+    logger.info(f"Attempting to save Order {order['invoice_no']} to FalkorDB...")
+    
+    try:
+        # Create a graph query for the Invoice node
+        query = f"""
+        CREATE (:Invoice {{
+            invoiceNumber: '{order['invoice_no']}',
+            orderID: '{order['order_id']}',
+            date: '{order['date'].strftime('%Y-%m-%d')}',
+            customerName: '{order['user_name']}',
+            itemizedList: '{str(order["products_list"]).replace("'", '"')}',
+            subtotal: {order['total_price']},
+            gst: {int(order['total_price'] * 0.05)}, 
+            finalTotal: {int(order['total_price'] * 1.05)}
+        }})
+        """
+        r.execute_command("GRAPH.QUERY", "products", query)
+        logger.info("✅ Data saved successfully to FalkorDB!")
+
+        # Log check: Retrieve the data we just saved
+        check_query = f"MATCH (i:Invoice {{invoiceNumber: '{order['invoice_no']}'}}) RETURN i.invoiceNumber, i.customerName, i.finalTotal"
+        retrieved = r.execute_command("GRAPH.QUERY", "products", check_query)
+        logger.info(f"🔍 READ CHECK (Retrieved from DB): {retrieved}")
+
+    except Exception as e:
+        logger.error(f"❌ FalkorDB Error during save: {e}")
+
+@st.dialog("🧾 Invoice")
+def show_invoice_popup():
+    st.text_area("Invoice", st.session_state.invoice, height=400)
+    st.download_button(
+        "⬇️ Download Invoice",
+        st.session_state.invoice,
+        file_name="invoice.txt"
+    )
+    if st.button("Close"):
+        st.session_state.show_invoice = False
+        st.rerun()
 
 
 def build_bill(cart: list) -> str:
@@ -249,9 +391,11 @@ def render_full_catalog(chat_open: bool):
 
 
 def add_to_cart(item: dict):
-    cart_item = {k: item[k] for k in ("id", "name", "price", "image_path")}
-    if cart_item not in st.session_state.cart:
+    existing_ids = [i["id"] for i in st.session_state.cart]
+    if item["id"] not in existing_ids:
+        cart_item = {k: item[k] for k in ("id", "name", "price", "image_path")}
         st.session_state.cart.append(cart_item)
+        st.toast("Added to cart ✅")
 
 
 # ---------------------------------------------------------------------------
@@ -397,5 +541,8 @@ def main():
         with col_chat:
             render_chat_panel()
 
+
+    if st.session_state.show_invoice:
+        show_invoice_popup()
 
 main()
