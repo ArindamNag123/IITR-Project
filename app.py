@@ -241,7 +241,6 @@ def render_cart():
             save_order(order)
             st.session_state.invoice = invoice
             st.session_state.show_invoice = True
-            st.session_state.cart = []
             st.sidebar.success("Order placed!")
 
 def create_order(cart, user="Guest"):
@@ -315,7 +314,8 @@ def save_order(order):
         }})
         """
         r.execute_command("GRAPH.QUERY", "products", query)
-        logger.info("✅ Data saved successfully to FalkorDB!")
+        st.session_state.cart = []  # Clear the cart after saving
+        logger.info("✅ Data saved successfully to FalkorDB and cart cleared!")
 
         # Log check: Retrieve the data we just saved
         check_query = f"MATCH (i:Invoice {{invoiceNumber: '{order['invoice_no']}'}}) RETURN i.invoiceNumber, i.customerName, i.finalTotal"
