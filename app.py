@@ -7,6 +7,7 @@ from datetime import datetime
 import pandas as pd
 import streamlit as st
 import redis
+from chatbot.database import falkor_db as r
 from PIL import Image
 from openai import OpenAI
 from langchain_core.messages import HumanMessage, AIMessage as LCMessage
@@ -21,20 +22,7 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# --- FalkorDB Connection ---
-r = redis.Redis(
-    host=os.getenv("FALKORDB_HOST"),
-    port=int(os.getenv("FALKORDB_PORT", 6379)),
-    username=os.getenv("FALKORDB_USER"),
-    password=os.getenv("FALKORDB_PASS"),
-    decode_responses=True
-)
-
-try:
-    r.ping()
-    logger.info("✅ Connected to FalkorDB")
-except Exception as e:
-    logger.error(f"❌ FalkorDB Connection Error: {e}")
+# Using centralized FalkorDB connection from chatbot.database
 
 # ---------------------------------------------------------------------------
 # Page config
@@ -405,12 +393,12 @@ def add_to_cart(item: dict):
 def render_chat_button(chat_open: bool):
     if chat_open:
         st.markdown(
-            '<a class="chat-fab open" href="/?chat=" title="Close chatbot">✕</a>',
+            '<a class="chat-fab open" href="/?chat=" target="_top" title="Close chatbot">✕</a>',
             unsafe_allow_html=True,
         )
     else:
         st.markdown(
-            '<a class="chat-fab" href="/?chat=open" title="Open Smart Retail Chatbot">💬</a>',
+            '<a class="chat-fab" href="/?chat=open" target="_top" title="Open Smart Retail Chatbot">💬</a>',
             unsafe_allow_html=True,
         )
 
@@ -487,6 +475,10 @@ def handle_user_message(user_input: str):
                 })
                 agent_reply_en = result["messages"][-1].content
                 routed_to = result.get("next_agent", "?")
+
+                # If we are in the cancellation flow, ensure the invoice modal is closed
+                if routed_to == "cancellation":
+                    st.session_state.show_invoice = False
 
                 # Store the English reply for next-turn context.
                 st.session_state.chat_history_en.append({"role": "assistant", "content": agent_reply_en})

@@ -71,13 +71,13 @@ _DEVANAGARI_RE = re.compile(r"[\u0900-\u097F]")
 # High-confidence patterns checked before keyword scoring.
 # Format: (regex_pattern, routing_key)
 _PRIORITY_PATTERNS: list[tuple[str, str]] = [
+    (r"\bcancel\b",                    "cancellation"),
+    (r"\breturn\b|\bexchange\b",       "returns"),
     (r"inv-\d+",                       "billing"),     # invoice ID
     (r"\border\s*(id|#|no)?\s*ord-\d+", "order"),      # order ID
     (r"\bbill(ing)?\b|\binvoice\b|\bpayment\b|\bgst\b|\btax\b|\breceipt\b", "billing"),
     (r"\btranslat",                    "translator"),
     (r"\bhindi\b|\benglish\b",         "translator"),
-    (r"\bcancel\b",                    "cancellation"),
-    (r"\breturn\b|\bexchange\b",       "returns"),
     (r"\breward|points\b",             "loyalty"),
 ]
 
