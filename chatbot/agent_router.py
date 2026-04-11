@@ -73,8 +73,18 @@ _DEVANAGARI_RE = re.compile(r"[\u0900-\u097F]")
 _PRIORITY_PATTERNS: list[tuple[str, str]] = [
     (r"\bcancel\b",                    "cancellation"),
     (r"\breturn\b|\bexchange\b",       "returns"),
-    (r"inv-\d+",                       "billing"),     # invoice ID
-    (r"\border\s*(id|#|no)?\s*ord-\d+", "order"),      # order ID
+    # 8-char hex order id (matches app.py UUID prefix on :Invoice.orderID)
+    (
+        r"(?:\b(?:order|track|tracking|status|where|lookup|find|delivery|shipment)\b.{0,120}\b[0-9a-fA-F]{8}\b"
+        r"|\b[0-9a-fA-F]{8}\b.{0,120}\b(?:order|track|status|lookup|delivery)\b"
+        r"|\b(?:order\s*(?:id|number|#)?\s*[:\s#-]*)[0-9a-fA-F]{8}\b)",
+        "order",
+    ),
+    # Message is only an order id (hex)
+    (r"^\s*[0-9a-fA-F]{8}\s*$",        "order"),
+    # Invoice number → order lookup (status, totals live on :Invoice)
+    (r"(?:inv|nv)-\d+",                "order"),
+    (r"\border\s*(id|#|no)?\s*ord-\d+", "order"),      # legacy ORD-… mock ids
     (r"\bbill(ing)?\b|\binvoice\b|\bpayment\b|\bgst\b|\btax\b|\breceipt\b", "billing"),
     (r"\btranslat",                    "translator"),
     (r"\bhindi\b|\benglish\b",         "translator"),

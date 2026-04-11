@@ -7,7 +7,7 @@ from datetime import datetime
 import pandas as pd
 import streamlit as st
 import redis
-from chatbot.database import falkor_db as r
+from chatbot.database import falkor_db as r, ORDER_STATUS_PLACED
 from PIL import Image
 from openai import OpenAI
 from langchain_core.messages import HumanMessage, AIMessage as LCMessage
@@ -298,7 +298,8 @@ def save_order(order):
             itemizedList: '{str(order["products_list"]).replace("'", '"')}',
             subtotal: {order['total_price']},
             gst: {int(order['total_price'] * 0.05)}, 
-            finalTotal: {int(order['total_price'] * 1.05)}
+            finalTotal: {int(order['total_price'] * 1.05)},
+            status: '{ORDER_STATUS_PLACED}'
         }})
         """
         r.execute_command("GRAPH.QUERY", "products", query)
@@ -306,7 +307,7 @@ def save_order(order):
         logger.info("✅ Data saved successfully to FalkorDB and cart cleared!")
 
         # Log check: Retrieve the data we just saved
-        check_query = f"MATCH (i:Invoice {{invoiceNumber: '{order['invoice_no']}'}}) RETURN i.invoiceNumber, i.customerName, i.finalTotal"
+        check_query = f"MATCH (i:Invoice {{invoiceNumber: '{order['invoice_no']}'}}) RETURN i.invoiceNumber, i.customerName, i.finalTotal, i.status"
         retrieved = r.execute_command("GRAPH.QUERY", "products", check_query)
         logger.info(f"🔍 READ CHECK (Retrieved from DB): {retrieved}")
 
