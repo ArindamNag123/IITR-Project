@@ -10,7 +10,7 @@
 
 The **Agentic Multimodal Commerce Platform** is a research and engineering initiative that lets shoppers find products and complete checkout-style flows using **natural language** (including multiple languages) and **product images**, not just keyword search.
 
-Today’s commerce assistants often treat text and images in isolation, treat OCR as plain text without product semantics, and automate billing without enough transparency. This project builds a **single conversational system** that reasons across modalities, adapts its workflow dynamically, and **explains** what it matched and why—so it can be taken seriously in real retail and e-commerce settings.
+Today's commerce assistants often treat text and images in isolation and automate billing without enough transparency. This project builds a **single conversational system** that routes queries intelligently across specialized agents, retrieves products using text and image similarity, and **explains** what it matched and why—so it can be taken seriously in real retail and e-commerce settings.
 
 ---
 
@@ -18,93 +18,114 @@ Today’s commerce assistants often treat text and images in isolation, treat OC
 
 | Gap | How this project addresses it |
 |-----|--------------------------------|
-| Discovery is text-only or image-only, rarely both in one flow | Unified chat + image upload with orchestrated multimodal retrieval |
-| OCR yields text, not product semantics (brand, size, variant) | **ANOCR** (advanced named OCR) for structured entities and confidence |
-| Weak multilingual support | **Translation** to a canonical language plus multilingual embeddings |
-| Billing feels like a black box | **Billing & explanation** agents with RAG-backed rationale |
-| Brittle, linear AI pipelines | **LangGraph**: explicit nodes, edges, conditions, retries, and fallbacks |
+| Discovery is text-only or image-only, rarely both in one flow | Unified chat + image upload with semantic search across modalities |
+| Weak multilingual support | **Translation** to a canonical language for search and response localization |
+| Billing feels like a black box | **Billing agent** with order tracking and transparent invoice generation |
+| Brittle, linear AI pipelines | **LangGraph**: explicit supervisor routing, pluggable agents, and policy enforcement |
+| No audit trail for commerce decisions | **FalkorDB** order storage and **agent routing logs** for full traceability |
 
-The goal is an architecture that is **agentic** (dynamic routing), **explainable**, **multilingual**, and **safe-by-design**—aligned with how production teams expect to deploy AI in commerce.
+The goal is an architecture that is **agentic** (intelligent routing), **explainable**, **multilingual**, and **safe-by-design**—aligned with how production teams expect to deploy AI in commerce.
 
 ---
 
 ## 🧠 Key ideas / concepts
 
-- **Agentic orchestration** — A conversation manager coordinates specialized agents; workflows are not a single fixed chain.
-- **LangGraph control flow** — Nodes (agents/steps), edges (transitions), and **conditions** (which path to take) are first-class; supports loops for retry and user confirmation.
-- **Multimodal RAG** — **FalkorDB** stores text, image, OCR, and multilingual vectors for retrieval-augmented grounding.
-- **Confidence-aware automation** — High / medium / low confidence gates drive billing, user confirmation, or fallback—not blind automation.
-- **Guardrails** — Input validation, policy constraints, and thresholds before irreversible actions (e.g. billing).
+- **Agentic orchestration** — A supervisor LLM/keyword router classifies user intent and routes to specialized agents; workflows adapt dynamically without hardcoded chains.
+- **LangGraph supervisor routing** — A single supervisor node routes to product agents, billing, order lookup, translation, returns, cancellation, or a fallback general agent.
+- **Multimodal retrieval** — Text search via TF-IDF + FAISS and image search via CLIP embeddings both query a product catalog; results are ranked and returned in user's language.
+- **Order & invoice storage** — **FalkorDB** persists orders, invoices, and customer data for audit, returns, and cancellation workflows.
+- **Guardrails & policies** — Enforced rules for cancellation windows, return eligibility, and billing thresholds (see `chatbot/policies.py`).
 - **Open-source stack** — Python, Streamlit, LangGraph, open LLMs and embedding models, enabling reproducibility and cost control.
 
-**What makes the platform “agentic” (from the proposal)**  
-Dynamic workflow selection, conditional execution and loops, confidence-aware automation, built-in safety guardrails, and explainable decisions.
+**What makes the platform "agentic"**  
+Dynamic supervisor-based routing, intent classification, specialized agent responsibility, policy-driven automation, and explainable decisions tied to FalkorDB records.
+
 
 ---
 
 ## 🛠️ What’s inside
 
-> *Repository layout reflects the implementation plan; adjust names as the codebase grows.*
+>*Repository layout reflects the current implementation.*
 
 | Area | Role |
 |------|------|
-| **Streamlit app** | Conversational UI: chat, image upload, streaming responses, confirmation controls |
-| **LangGraph runtime** | Python application wiring graph definition, state, and execution |
-| **Agent layer** | Pluggable agents: conversation manager, guardrails, intent, retrieval, vision, ANOCR, translation, billing, explanation |
-| **FalkorDB** | Vector store for multimodal RAG (text, image, OCR, multilingual embeddings) |
-| **Config / prompts** | Model endpoints, thresholds, safety rules, and prompt templates |
-| **Tests & eval** | Unit/integration tests and optional retrieval-quality checks |
+| **Streamlit app** (`app.py`) | Conversational UI: chat, image upload, streaming responses, cart, billing, order status lookup |
+| **LangGraph runtime** (`chatbot/chatbot_controller.py`) | Graph definition: supervisor → agents → END; state management |
+| **Agent layer** (`chatbot/agents/`) | Specialized agents: product, billing, order, translator, returns, cancellation, loyalty, support, general |
+| **Supervisor & routing** (`chatbot/agent_router.py`) | LLM-based or keyword-based intent detection and agent selection |
+| **Order & invoice storage** (`chatbot/database.py`) | FalkorDB connection for persisting and retrieving orders, invoices, and order status |
+| **Policy enforcement** (`chatbot/policies.py`) | Business rules for returns, cancellations, and billing |
+| **Retrieval** (`chatbot/rag/retriever.py`) | TF-IDF + FAISS-based text retrieval; ready for embedding model swap |
+| **Image search** (`similarity_engine.py`) | CLIP-based image embeddings and similarity search over product catalog |
+| **Config / prompts** | Model endpoints, thresholds, and system prompts for agents |
 
-**Suggested folder sketch**
+**Actual folder structure**
 
 ```text
 iitr-project/
 ├── README.md                 # This file
-├── requirements.txt          # or pyproject.toml
-├── app/                      # Streamlit entrypoints and UI components
-├── graph/                    # LangGraph graph definition(s), state schema
-├── agents/                   # Agent implementations (thin wrappers over tools)
-├── retrieval/                # FalkorDB client, embedding pipelines, RAG helpers
-├── models/                   # Model loading / routing (LLM, embedders, CLIP/SigLIP)
-├── config/                   # YAML/TOML for thresholds, policies, locales
-└── tests/                    # Automated tests
-```
+├── requirements.txt
+├── app.py                    # Streamlit entry point
+├── config.py                 # Configuration and paths
+├── similarity_engine.py       # CLIP-based image search utility
+├── chatbot/
+│   ├── __init__.py
+│   ├── agent_router.py       # Supervisor: LLM-based intent routing
+│   ├── chatbot_controller.py  # LangGraph StateGraph definition
+│   ├── database.py           # FalkorDB connection and invoice management
+│   ├── policies.py           # Policy rules (return windows, cancellation, etc.)
+│   ├── registry.py           # Agent registration and discovery
+│   ├── state.py              # AgentState schema
+│   ├── translator_module.py  # Multilingual translation utilities
+│   ├── agents/
+│   │   ├── __init__.py       # Auto-loads all agents via @registry.register decorators
+│   │   ├── base.py           # Base agent class
+│   │   ├── product_agent.py  # Product search and retrieval
+│   │   ├── billing_agent.py  # Checkout, pricing, tax, invoice generation
+│   │   ├── order_agent.py    # Order lookup and status
+│   │   ├── translator_agent.py # Language translation
+│   │   ├── returns_agent.py  # Return processing
+│   │   ├── cancellation_agent.py # Cancellation processing
+│   │   ├── loyalty_agent.py  # Loyalty program (stub)
+│   │   ├── support_agent.py  # Customer support (stub)
+│   │   └── general_agent.py  # Fallback for out-of-scope queries
+│   └── rag/
+│       ├── __init__.py
+│       └── retriever.py      # TF-IDF + FAISS retriever
+├── data/
+│   └── styles.csv            # Product catalog
+├── dataset/
+│   └── images/               # Product images for similarity search
+└── docs/
+    ├── AGENT_POLICIES.md     # Detailed policy rules
+    └── CHATBOT_MODULE.md     # Agent system documentation
 
 **Core technology choices (from the proposal)**
 
 | Layer | Technologies |
 |-------|----------------|
-| Frontend | **Streamlit** — chat UI, image upload, streaming, confirmation buttons |
-| Backend & orchestration | **Python**, **LangGraph** |
-| LLMs (open) | LLaMA, Mistral, Mixtral, Phi (as appropriate) |
-| Text embeddings | Sentence-Transformers, BGE, Instructor |
-| Image embeddings | CLIP / SigLIP |
-| Vector & RAG | **FalkorDB** — text, image, OCR, multilingual vectors |
+| Frontend | **Streamlit** — chat UI, image upload, streaming, cart, billing |
+| Backend & orchestration | **Python**, **LangGraph**, **pydantic** |
+| Routing & intent | **OpenAI API** (LLM-based supervisor) or keyword fallback (zero-dependency) |
+| LLMs (open) | OpenAI GPT, LLaMA, Mistral, or Mixtral (configurable) |
+| Text Search | TF-IDF + FAISS (in-memory, production-ready with vector DB swap) |
+| Image Search | CLIP embeddings + cosine similarity |
+| Vector & RAG | **FalkorDB** — text and image vectors (Redis-based graph database) |
 
 ### Agent responsibilities (at a glance)
 
-| Agent | Responsibility |
+| Agent |	Responsibility |
 |-------|------------------|
-| **Conversation Manager** | Session state, intent (text vs image path), LangGraph route selection |
-| **Guardrails** | Validate inputs; enforce product/policy rules; confidence thresholds for automation |
-| **Intent classifier** | Distinguish text query vs image scan and downstream branches |
-| **Text retrieval** | Multilingual query embedding; semantic search in FalkorDB; ranked candidates |
-| **Vision search** | Image embedding; similarity search in FalkorDB |
-| **ANOCR** | Extract brand, product name, size, attributes; structured entities + confidence |
-| **Translation** | Normalize text to a canonical language for search and responses |
-| **Billing & validation** | Price, tax, discount; invoice generation |
-| **Explanation** | Use RAG context to justify decisions to the user |
-
-**LangGraph core nodes (from the proposal)**  
-`ChatInput`, `ConversationManager`, `Guardrails`, `IntentClassifier`, `TextRetrieval`, `VisionSearch`, `ANOCR`, `Translation`, `ConfidenceEvaluation`, `UserConfirmation`, `Billing`, `ExplainResponse`, `Fallback`.
-
-**Conceptual path**
-
-```text
-ChatInput → ConversationManager → Guardrails → IntentClassifier
-  → (TextRetrieval | VisionSearch / ANOCR / Translation)
-  → ConfidenceEvaluation → (Billing | UserConfirmation | Fallback) → ExplainResponse
-```
+| **Supervisor** | Classify user intent (text vs order lookup vs returns, etc.); route to specialist agent |
+| **Product** | Retrieve products via text/image similarity; return ranked candidates with descriptions and prices |
+| **Translator** | Normalize user queries and responses to/from user's language |
+| **Billing & validation** | Price calculation, tax, discounts, invoice generation; checkout workflow |
+| **Order** | Retrieve order status and invoice details from FalkorDB by order ID or invoice number |
+| **Returns** | Process returns per policy rules (e.g., 30-day window, condition); update FalkorDB status |
+| **Cancellation** | Process order cancellation per policy rules; update FalkorDB status |
+| **Loyalty** | Loyalty points and rewards (stub — ready for implementation) |
+| **Support** | Escalation and customer support workflows (stub — ready for implementation) |
+| **General** | Fallback for out-of-scope or ambiguous queries |
 
 ---
 
@@ -113,72 +134,89 @@ ChatInput → ConversationManager → Guardrails → IntentClassifier
 **LangGraph Flow A — Text query**
 
 ```text
-ChatInput
-  → ConversationManager
-  → Guardrails
-  → IntentClassifier (TEXT_QUERY)
-  → Translation
-  → TextRetrieval (FalkorDB)
-  → ConfidenceEvaluation
-      ├─ High   → Billing
-      ├─ Medium → UserConfirmation → Retry
-      └─ Low    → Fallback
+START
+  │
+  ▼
+[supervisor]  ← Classifies intent, routes to next_agent
+  │
+  │ conditional edge (route_decision)
+  │
+  ├──► [product]       ──► END
+  ├──► [billing]       ──► END
+  ├──► [order]         ──► END
+  ├──► [translator]    ──► END
+  ├──► [returns]       ──► END
+  ├──► [cancellation]  ──► END
+  ├──► [loyalty]       ──► END
+  ├──► [support]       ──► END
+  └──► [general]       ──► END (fallback)
 ```
 
-**LangGraph Flow B — Image upload**
+User uploads an image and asks in Hindi to generate a bill for that product. The system may: use vision first; fall back to ANOCR when vision confidence is low; normalize entities; confirm the product via FalkorDB, produces billing and then returns a short explanation in the user’s language.
 
-```text
-ChatInput
-  → ConversationManager
-  → Guardrails
-  → IntentClassifier (IMAGE_SCAN)
-  → VisionSearch (FalkorDB)
-  → ConfidenceEvaluation
-      ├─ High → Billing
-      └─ Low  → ANOCR
-                  → Translation
-                  → TextRetrieval (FalkorDB)
-                  → ConfidenceEvaluation (Merged)
-                      ├─ High   → Billing
-                      ├─ Medium → UserConfirmation → Retry
-                      └─ Low    → Fallback
-```
+Scenario A — Product search by text:
+User: "I need a face wash for dry skin"
+  → Supervisor: Intent = "product_search"
+  → Product agent: Text embedding → FAISS similarity search → returns 3–5 products
+  → Translator: Localizes product names and descriptions to user's language
+  → Response: Ranked products with prices and details
 
-**Narrative summaries**
+Scenario B — Product search by image:
+User: [uploads product image]
+  → Supervisor: Intent = "image_search"
+  → Product agent: CLIP image embedding → similarity search → returns 3–5 products
+  → Response: Ranked products with prices and details
 
-- **Flow A** — User asks in any supported language → translation → text retrieval in FalkorDB → confidence branch → billing, user confirmation, or fallback → explained answer.
-- **Flow B** — Image → vision search → if confidence is low, **ANOCR** → translation → text retrieval → merged confidence → billing / confirmation / fallback → explanation.
+Scenario C — Order lookup:
+User: "Where's my order? INV-12345"
+  → Supervisor: Intent = "order_lookup"
+  → Order agent: Parse invoice number from FalkorDB → retrieve status, total, items
+  → Response: Order status, expected delivery, and billing details
 
-**End-to-end story (from the proposal)**  
-User uploads an image and asks in Hindi to generate a bill for that product. The system may: use vision first; fall back to ANOCR when vision confidence is low; normalize entities; confirm the product via FalkorDB; produce billing; return a short explanation in the user’s language.
+Scenario D — Multilingual query:
+User: "मुझे बिल दिखाओ" (Hindi: "Show me the bill")
+  → Supervisor: Detects Hindi intent = "billing_help"
+  → Translator: Translates to English for retrieval
+  → Billing agent: Retrieves or generates invoice
+  → Translator: Translates response back to Hindi
+  → Response: Invoice in Hindi
+
+Scenario E — Return request:
+User: "I want to return order ORD-ABC123"
+  → Supervisor: Intent = "return_request"
+  → Returns agent: Fetch order from FalkorDB → check 30-day window → issue RMA → update status
+  → Response: Return approved with RMA number and instructions
+
 
 **Illustrative architecture**
 
-```text
-┌────────────────────┐
-│ Streamlit UI       │
-│ (Chat + Image)     │
-└─────────┬──────────┘
-          │ user input
-          ▼
-┌────────────────────┐
-│ LangGraph Runtime  │
-│ (Python)           │
-└─────────┬──────────┘
-          │ state + control
-          ▼
-┌──────────────────────────────────────────────┐
-│ Agent orchestration layer                    │
-│ Conversation Manager · Guardrails · Intent   │
-│ Text / Vision · ANOCR · Translation          │
-│ Billing · Explain                            │
-└─────────┬────────────────────────────────────┘
-          │ vector queries
-          ▼
-┌──────────────────────────────────────────────┐
-│ FalkorDB                                     │
-│ Text · Image · OCR & multilingual vectors    │
-└──────────────────────────────────────────────┘
+```
+┌────────────────────────────────────┐
+│ Streamlit UI                       │
+│ (Chat + Image Upload + Cart)       │
+└──────────────┬─────────────────────┘
+               │ user input
+               ▼
+┌────────────────────────────────────┐
+│ LangGraph Supervisor Node          │
+│ Intent → Route Decision            │
+└──────────────┬─────────────────────┘
+               │ route to specialist
+               ▼
+┌────────────────────────────────────┐
+│ Specialized Agent Nodes            │
+│ Product · Billing · Order          │
+│ Translator · Returns · Cancel      │
+│ Loyalty · Support · General        │
+└──────────────┬─────────────────────┘
+               │
+        ┌──────┴──────┐
+        ▼             ▼
+    ┌──────────┐  ┌──────────────┐
+    │ FAISS    │  │ FalkorDB     │
+    │ (Text &  │  │ (Orders,     │
+    │ Images)  │  │ Invoices)    │
+    └──────────┘  └──────────────┘
 ```
 
 *Add screenshots, sample invoices, and retrieval metrics here as the implementation matures.*
@@ -193,7 +231,11 @@ User uploads an image and asks in Hindi to generate a bill for that product. The
 - **Research and coursework (IITR)** demonstrating modern RAG, agents, and graph-based orchestration on realistic commerce scenarios.
 
 **Business value (from the proposal)**  
-Faster checkout, reduced manual intervention, multilingual global support, and enterprise-grade trust and safety.
+Faster product discovery (text + image)
+Reduced manual intervention via automated routing and policies
+Multilingual global support without separate systems
+Full audit trail for orders, returns, and billing
+Enterprise-grade trust and safety via policy enforcement
 
 ---
 
@@ -201,10 +243,14 @@ Faster checkout, reduced manual intervention, multilingual global support, and e
 
 | Status | Phase | Focus |
 |--------|-------|--------|
-| Planned | **Foundation** | Streamlit shell, FalkorDB connectivity, baseline embeddings and ingestion |
-| Planned | **Graph & agents** | LangGraph graph, guardrails, intent, text + vision retrieval, ANOCR + translation paths |
-| Planned | **Product experience** | Confidence gates, user confirmation, retry/fallback flows, streaming UX |
-| Planned | **Trust & quality** | Explanation quality, eval sets, guardrail tuning, documentation and demos |
+| Complete | **Foundation** | Streamlit shell, FalkorDB connectivity, baseline embeddings and ingestion |
+| Complete | **Core agents** | Product search, billing, order lookup, translation, returns, cancellation |
+| Complete | **Supervisor routing** | LLM-based and keyword-based intent classification and routing
+| In Progress | **Policy refinement** | Return window tuning, cancellation rules, tax/discount logic
+| Planned | **Loyalty integration** | Points system, rewards, personalized recommendations
+| Planned | **Support escalation** | Human handoff workflows and ticket integration
+| Planned | **Eval & metrics** | Retrieval quality checks, routing accuracy, agent performance benchmarks
+| Planned | **Production hardening** | Load testing, rate limiting, analytics, monitoring
 
 **Retry, retake & fallback (by design)**
 
@@ -213,14 +259,18 @@ Faster checkout, reduced manual intervention, multilingual global support, and e
 
 ---
 
+## For running instructions, see [Run_Setup.md](Run_Setup.md).
+
 ## 🤝 Contributing
 
 1. **Branching** — Use short-lived feature branches; keep `main` stable.
-2. **Changes** — Small, reviewable PRs; describe behavior and any new config or environment variables.
-3. **Quality** — Run tests and linters before opening a PR; document non-obvious thresholds (for example confidence cutoffs).
-4. **Safety** — Do not weaken guardrails or billing checks without explicit review and tests.
+2. **New agents** — Create chatbot/agents/my_agent.py, decorate with @registry.register(routing_key="my_agent", keywords=[...]), and add one import line to __init__.py. The supervisor and graph are auto-updated.
+3. **Changes** — Small, reviewable PRs; describe behavior and any new config or environment variables.
+4. **Quality** — Run tests before opening a PR; document policy thresholds (e.g., return windows, cancellation cutoffs).
+5. **Safety** — Do not weaken guardrails or billing checks without explicit review and tests.
 
-For alignment with project scope, use this README together with the original proposal and maintainer guidance.
+
+For alignment with project scope, use this README together with the documentation in docs and maintainer guidance.
 
 ---
 
