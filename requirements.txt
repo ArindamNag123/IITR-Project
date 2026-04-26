@@ -1,0 +1,15 @@
+streamlit
+pandas
+numpy
+pillow
+scikit-learn
+neo4j
+tensorflow
+torch
+torchvision
+faiss-cpu
+git+https://github.com/openai/CLIP.git
+langchain-core
+langchain-openai
+langgraph
+python-dotenv
