@@ -36,6 +36,7 @@ st.set_page_config(layout="wide", page_title="Smart Retail App")
 # ---------------------------------------------------------------------------
 
 st.session_state.setdefault("cart", [])
+st.session_state.setdefault("last_text_search_results", [])
 st.session_state.setdefault("chat_history", [])
 st.session_state.setdefault("chat_history_en", [])
 st.session_state.setdefault("last_user_language", "en")
@@ -186,9 +187,15 @@ def render_sidebar():
     results = []
 
     if mode == "Text":
-        query = st.sidebar.text_input("Search")
+        # Persist query + last text results so a rerun from "Add to Cart" still shows
+        # the same result cards (and the same button keys). Otherwise results=[] on every
+        # run except the one where "Search" was clicked, and the cart click is dropped.
+        query = st.sidebar.text_input("Search", key="sidebar_text_search_query")
         if st.sidebar.button("Search"):
             results = search_by_text(query, gender_filter=gender_filter)
+            st.session_state.last_text_search_results = results
+        else:
+            results = list(st.session_state.last_text_search_results)
 
     elif mode == "Image":
         uploaded = st.sidebar.file_uploader("Upload image")
@@ -385,6 +392,7 @@ def add_to_cart(item: dict):
         cart_item = {k: item[k] for k in ("id", "name", "price", "image_path")}
         st.session_state.cart.append(cart_item)
         st.toast("Added to cart ✅")
+        st.rerun()
 
 
 # ---------------------------------------------------------------------------
@@ -437,6 +445,9 @@ def render_chat_panel():
 
 
 def handle_user_message(user_input: str):
+    # Sidebar "Buy Now" sets this; keep the dialog from staying open over the chat widget.
+    st.session_state.show_invoice = False
+
     # Display history stays in the user's language.
     st.session_state.chat_history.append({"role": "user", "content": user_input})
 

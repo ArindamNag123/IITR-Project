@@ -1,21 +1,25 @@
 """
-Loyalty Agent — manages reward points and membership tiers.
-
-Status : STUB (skeleton only)
--------
-  This module is registered and routed correctly.  Replace the stub node
-  below with real loyalty logic when the feature is ready:
-
-  1. Look up the customer's points balance from the Loyalty Service.
-  2. Calculate tier status (Silver / Gold / Platinum).
-  3. Show available redemption options.
-  4. Apply points during checkout (integrate with billing agent).
+Loyalty Agent — reward points and membership (generalized; no per-user tracking yet).
 """
 
-from chatbot.agents.base import make_stub_agent
-from chatbot.registry import registry
+from langchain_core.messages import AIMessage
 
-loyalty_agent_node = registry.register(
+from chatbot.registry import registry
+from chatbot.state import AgentState
+
+_GENERAL_LOYALTY_REPLY = (
+    "We don’t yet link this chat to individual shopper accounts, so I can’t look up "
+    "your personal **points balance** or **order history** here.\n\n"
+    "**How rewards usually work** (when we plug in accounts later):\n"
+    "• You earn **points on eligible purchases** (often a small percentage of what you spend).\n"
+    "• Points can be **redeemed** toward discounts or offers, subject to program rules.\n"
+    "• Some programs use **tiers** (e.g. standard / plus / premium) with extra perks.\n\n"
+    "For now, treat this as **general information** only. "
+    "If you have a **billing or order** question, say **invoice**, **order status**, or **place order** and I’ll route you to the right help."
+)
+
+
+@registry.register(
     routing_key="loyalty",
     keywords=[
         "loyalty", "points", "reward", "rewards", "redeem",
@@ -23,4 +27,12 @@ loyalty_agent_node = registry.register(
         "cashback", "coupon", "voucher", "discount",
     ],
     description="Manages reward points, membership tiers, and redemptions.",
-)(make_stub_agent("Loyalty & Rewards"))
+)
+def loyalty_agent_node(state: AgentState) -> AgentState:
+    return {
+        "messages": [AIMessage(content=_GENERAL_LOYALTY_REPLY)],
+        "metadata": {
+            **state.get("metadata", {}),
+            "loyalty": {"mode": "generalized", "personalized_balance": False},
+        },
+    }

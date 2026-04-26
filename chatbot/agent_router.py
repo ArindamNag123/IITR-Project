@@ -27,6 +27,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel, Field
 
 from chatbot.state import AgentState
+from chatbot.catalog_lookup import whole_message_matches_catalog_product
 
 load_dotenv()
 
@@ -85,6 +86,7 @@ _PRIORITY_PATTERNS: list[tuple[str, str]] = [
     # Invoice number → order lookup (status, totals live on :Invoice)
     (r"(?:inv|nv)-\d+",                "order"),
     (r"\border\s*(id|#|no)?\s*ord-\d+", "order"),      # legacy ORD-… mock ids
+    (r"\bplace order\b|\bcheckout\b|\bpurchase order\b", "billing"),
     (r"\bbill(ing)?\b|\binvoice\b|\bpayment\b|\bgst\b|\btax\b|\breceipt\b", "billing"),
     (r"\btranslat",                    "translator"),
     (r"\bhindi\b|\benglish\b",         "translator"),
@@ -113,6 +115,13 @@ def _keyword_route(message: str) -> RouterDecision:
             next_agent="translator",
             intent="Message written in Hindi — routing to translator.",
             detected_language="hi",
+        )
+
+    if whole_message_matches_catalog_product(message):
+        return RouterDecision(
+            next_agent="billing",
+            intent="Exact catalog product title — billing / checkout.",
+            detected_language="en",
         )
 
     for pattern, agent in _PRIORITY_PATTERNS:
@@ -163,6 +172,7 @@ def _build_system_prompt() -> str:
         "Rules:\n"
         "• Choose 'general' only when no specialist fits.\n"
         "• Prefer the most specific agent (e.g. 'cancellation' over 'order').\n"
+        "• If the user message is only a full product title (checkout by name), choose 'billing'.\n"
         "• Respond ONLY with the structured JSON — no extra text."
     )
 

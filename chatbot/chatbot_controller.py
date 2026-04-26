@@ -15,8 +15,8 @@ Graph topology
       ├──► [billing]       ──► END
       ├──► [order]         ──► END
       ├──► [translator]    ──► END
-      ├──► [cancellation]  ──► END   (stub)
-      ├──► [returns]       ──► END   (stub)
+      ├──► [cancellation]  ──► END
+      ├──► [returns]       ──► END   (FalkorDB return + refund message)
       ├──► [loyalty]       ──► END   (stub)
       ├──► [support]       ──► END   (stub)
       └──► [general]       ──► END   ← fallback for out-of-scope queries

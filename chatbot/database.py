@@ -1,8 +1,11 @@
 import os
 import re
-import redis
+import uuid
 import logging
+from datetime import datetime
 from typing import Any, Optional
+
+import redis
 
 from dotenv import load_dotenv
 
@@ -14,6 +17,7 @@ logger = logging.getLogger(__name__)
 ORDER_STATUS_PLACED = "Order_Placed"
 ORDER_STATUS_CANCELLED = "Order_Cancelled"
 ORDER_STATUS_IN_TRANSIT = "Order_In_Transit"
+ORDER_STATUS_RETURN_SUCCESSFUL = "Order_Return_Successful"
 
 GRAPH_NAME = "products"
 
@@ -440,6 +444,64 @@ def set_invoice_status(invoice_no: str, status: str) -> bool:
     except Exception as e:
         logger.warning("set_invoice_status failed: %s", e)
         return False
+
+
+def save_new_invoice_order(
+    products_list: list[str],
+    prices_list: list[int],
+    user_name: str = "Guest",
+) -> Optional[dict[str, Any]]:
+    """
+    Create a new :Invoice in FalkorDB (same shape as Streamlit checkout in app.py).
+    Returns order fields on success, or None if DB is unavailable or the write fails.
+    """
+    if falkor_db is None:
+        logger.warning("save_new_invoice_order: FalkorDB not connected")
+        return None
+    if not products_list or len(products_list) != len(prices_list):
+        return None
+
+    order_id = str(uuid.uuid4())[:8]
+    invoice_no = f"INV-{int(datetime.now().timestamp())}"
+    ts = datetime.now()
+    total_price = int(sum(prices_list))
+    gst = int(total_price * 0.05)
+    final_total = int(total_price * 1.05)
+
+    items_literal = str(products_list).replace("'", '"')
+    esc_inv = _cypher_escape(invoice_no)
+    esc_oid = _cypher_escape(order_id)
+    esc_name = _cypher_escape(user_name)
+    esc_items = _cypher_escape(items_literal)
+
+    try:
+        q = (
+            "CREATE (:Invoice {"
+            f"invoiceNumber: '{esc_inv}', "
+            f"orderID: '{esc_oid}', "
+            f"date: '{ts.strftime('%Y-%m-%d')}', "
+            f"customerName: '{esc_name}', "
+            f"itemizedList: '{esc_items}', "
+            f"subtotal: {total_price}, "
+            f"gst: {gst}, "
+            f"finalTotal: {final_total}, "
+            f"status: '{ORDER_STATUS_PLACED}'"
+            "})"
+        )
+        falkor_db.execute_command("GRAPH.QUERY", GRAPH_NAME, q)
+        return {
+            "invoice_no": invoice_no,
+            "order_id": order_id,
+            "date": ts,
+            "products_list": list(products_list),
+            "prices_list": list(prices_list),
+            "total_price": total_price,
+            "gst": gst,
+            "final_total": final_total,
+        }
+    except Exception as e:
+        logger.warning("save_new_invoice_order failed: %s", e)
+        return None
 
 
 def get_db():
