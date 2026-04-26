@@ -10,7 +10,7 @@
 
 The **Agentic Multimodal Commerce Platform** is a research and engineering initiative that lets shoppers find products and complete checkout-style flows using **natural language** (including multiple languages) and **product images**, not just keyword search.
 
-Today’s commerce assistants often treat text and images in isolation, treat OCR as plain text without product semantics, and automate billing without enough transparency. This project builds a **single conversational system** that reasons across modalities, adapts its workflow dynamically, and **explains** what it matched and why—so it can be taken seriously in real retail and e-commerce settings.
+Today's commerce assistants often treat text and images in isolation and automate billing without enough transparency. This project builds a **single conversational system** that routes queries intelligently across specialized agents, retrieves products using text and image similarity, and **explains** what it matched and why—so it can be taken seriously in real retail and e-commerce settings.
 
 ---
 
@@ -18,13 +18,13 @@ Today’s commerce assistants often treat text and images in isolation, treat OC
 
 | Gap | How this project addresses it |
 |-----|--------------------------------|
-| Discovery is text-only or image-only, rarely both in one flow | Unified chat + image upload with orchestrated multimodal retrieval |
-| OCR yields text, not product semantics (brand, size, variant) | **ANOCR** (advanced named OCR) for structured entities and confidence |
-| Weak multilingual support | **Translation** to a canonical language plus multilingual embeddings |
-| Billing feels like a black box | **Billing & explanation** agents with RAG-backed rationale |
-| Brittle, linear AI pipelines | **LangGraph**: explicit nodes, edges, conditions, retries, and fallbacks |
+| Discovery is text-only or image-only, rarely both in one flow | Unified chat + image upload with semantic search across modalities |
+| Weak multilingual support | **Translation** to a canonical language for search and response localization |
+| Billing feels like a black box | **Billing agent** with order tracking and transparent invoice generation |
+| Brittle, linear AI pipelines | **LangGraph**: explicit supervisor routing, pluggable agents, and policy enforcement |
+| No audit trail for commerce decisions | **FalkorDB** order storage and **agent routing logs** for full traceability |
 
-The goal is an architecture that is **agentic** (dynamic routing), **explainable**, **multilingual**, and **safe-by-design**—aligned with how production teams expect to deploy AI in commerce.
+The goal is an architecture that is **agentic** (intelligent routing), **explainable**, **multilingual**, and **safe-by-design**—aligned with how production teams expect to deploy AI in commerce.
 
 ---
 
